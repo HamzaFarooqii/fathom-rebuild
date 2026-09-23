@@ -24,6 +24,21 @@ function Get-UtcTimestamp {
     return (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 }
 
+# Windows PowerShell 5.1 (powershell.exe, used by the Claude Code hook) does not
+# recognize the "utf8NoBOM" encoding name that PowerShell 7+ (pwsh, used by the
+# Codex hook) supports -- Set-Content/Add-Content -Encoding utf8NoBOM throws a
+# parameter-binding error on 5.1 before anything is written. Writing via .NET
+# directly sidesteps the enum entirely and behaves identically on both editions.
+function Write-Utf8NoBom {
+    param([string]$Path, [string]$Value)
+    [System.IO.File]::WriteAllText($Path, "$Value`r`n", [System.Text.UTF8Encoding]::new($false))
+}
+
+function Add-Utf8NoBom {
+    param([string]$Path, [string]$Value)
+    [System.IO.File]::AppendAllText($Path, "$Value`r`n", [System.Text.UTF8Encoding]::new($false))
+}
+
 function Get-TranscriptPrompt {
     param([string]$TranscriptPath)
 
@@ -81,6 +96,24 @@ function Get-TranscriptPrompt {
     return $null
 }
 
+function Get-TranscriptModel {
+    param([string]$TranscriptPath)
+
+    if ([string]::IsNullOrWhiteSpace($TranscriptPath) -or -not (Test-Path -LiteralPath $TranscriptPath)) {
+        return $null
+    }
+
+    $lines = Get-Content -LiteralPath $TranscriptPath
+    for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+        if ([string]::IsNullOrWhiteSpace($lines[$i])) { continue }
+        try { $item = $lines[$i] | ConvertFrom-Json -Depth 32 } catch { continue }
+        if ($item.message.model) {
+            return [string]$item.message.model
+        }
+    }
+    return $null
+}
+
 function Set-FrontmatterValue {
     param(
         [string]$Content,
@@ -111,7 +144,8 @@ try {
     $sessionId = [string]$event.session_id
     $safeSessionId = $sessionId -replace '[^A-Za-z0-9._-]', '-'
     $shortSessionId = if ($safeSessionId.Length -gt 8) { $safeSessionId.Substring(0, 8) } else { $safeSessionId }
-    $model = if ($event.model) { [string]$event.model } else { "unknown" }
+    $model = if ($event.model) { [string]$event.model } else { Get-TranscriptModel -TranscriptPath ([string]$event.transcript_path) }
+    if ([string]::IsNullOrWhiteSpace($model)) { $model = "unknown" }
     $logFile = Get-ChildItem -LiteralPath $logsDir -Filter "*_$safeSessionId.md" -File |
         Sort-Object Name |
         Select-Object -First 1
@@ -139,10 +173,20 @@ Session: ``$shortSessionId`` | Project: ``fathom-rebuild`` | Author: ``HamzaFaro
 
 ---
 "@
-        Set-Content -LiteralPath $logPath -Value $header -Encoding utf8NoBOM
+        Write-Utf8NoBom -Path $logPath -Value $header
     }
     else {
         $logPath = $logFile.FullName
+        if ($model -ne "unknown") {
+            # An earlier event in this session (before the transcript had any
+            # assistant turns yet) may have written "model: unknown" into the
+            # frontmatter. Keep it current once a real model becomes known.
+            $existing = Get-Content -LiteralPath $logPath -Raw
+            $patched = Set-FrontmatterValue -Content $existing -Key "model" -Value $model
+            if ($patched -ne $existing) {
+                Write-Utf8NoBom -Path $logPath -Value $patched.TrimEnd()
+            }
+        }
     }
 
     $content = Get-Content -LiteralPath $logPath -Raw
@@ -156,7 +200,7 @@ Session: ``$shortSessionId`` | Project: ``fathom-rebuild`` | Author: ``HamzaFaro
                 $content = Set-FrontmatterValue -Content $content -Key "first_prompt_time" -Value $timestamp
             }
             $content = Set-FrontmatterValue -Content $content -Key "last_prompt_time" -Value $timestamp
-            Set-Content -LiteralPath $logPath -Value $content.TrimEnd() -Encoding utf8NoBOM
+            Write-Utf8NoBom -Path $logPath -Value $content.TrimEnd()
 
             $entry = @"
 
@@ -167,7 +211,7 @@ model: $model
 
 $($event.prompt)
 "@
-            Add-Content -LiteralPath $logPath -Value $entry -Encoding utf8NoBOM
+            Add-Utf8NoBom -Path $logPath -Value $entry
         }
         "Stop" {
             if ($promptCount -le $responseCount) {
@@ -179,7 +223,7 @@ $($event.prompt)
                         $content = Set-FrontmatterValue -Content $content -Key "first_prompt_time" -Value $transcriptPrompt.Timestamp
                     }
                     $content = Set-FrontmatterValue -Content $content -Key "last_prompt_time" -Value $transcriptPrompt.Timestamp
-                    Set-Content -LiteralPath $logPath -Value $content.TrimEnd() -Encoding utf8NoBOM
+                    Write-Utf8NoBom -Path $logPath -Value $content.TrimEnd()
 
                     $promptEntry = @"
 
@@ -190,7 +234,7 @@ model: $model
 
 $($transcriptPrompt.Text)
 "@
-                    Add-Content -LiteralPath $logPath -Value $promptEntry -Encoding utf8NoBOM
+                    Add-Utf8NoBom -Path $logPath -Value $promptEntry
                     $promptCount = $entryNumber
                 }
             }
@@ -206,10 +250,10 @@ model: $model
 
 $($event.last_assistant_message)
 "@
-                Add-Content -LiteralPath $logPath -Value $entry -Encoding utf8NoBOM
+                Add-Utf8NoBom -Path $logPath -Value $entry
                 $updated = Get-Content -LiteralPath $logPath -Raw
                 $updated = Set-FrontmatterValue -Content $updated -Key "total_exchanges" -Value ([string]$entryNumber)
-                Set-Content -LiteralPath $logPath -Value $updated.TrimEnd() -Encoding utf8NoBOM
+                Write-Utf8NoBom -Path $logPath -Value $updated.TrimEnd()
             }
         }
         default {
