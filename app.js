@@ -83,13 +83,64 @@
           <div class="step"><span class="step-num">01</span><div><strong>Calendar connected</strong><br><small>Simulated — no account access requested</small></div><span>✓</span></div>
           <div class="step"><span class="step-num">02</span><div><strong>Meetings processed</strong><br><small>Seeded transcripts with realistic timing</small></div><span>✓</span></div>
           <div class="step"><span class="step-num">03</span><div><strong>Workspace ready</strong><br><small>Actions persist in this browser</small></div><span>✓</span></div>
+          <div class="step"><span class="step-num">04</span><div><strong>Voice check</strong><br><small id="mic-status">Optional — like Fathom's own test call, confirms your mic actually works</small></div><button class="button small" id="mic-test-btn" type="button">Test call</button></div>
         </div>
+        <div class="mic-meter" id="mic-meter" hidden aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
         <button class="button accent" id="enter-demo">Open the 60-minute meeting <span>→</span></button>
         <button class="button ghost" style="margin-top:9px" data-go="/meetings">Browse all meetings</button>
       </section>
     </main>`;
     $("#enter-demo").onclick = () => goto("/meeting/q4-council");
+    wireMicTest();
     $("[data-go]").onclick = e => goto(e.currentTarget.dataset.go);
+  }
+
+  function wireMicTest() {
+    const btn = $("#mic-test-btn"), status = $("#mic-status"), meter = $("#mic-meter");
+    if (!btn) return;
+    btn.onclick = async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        status.textContent = "Microphone access isn't available in this browser — this step is optional, continue whenever.";
+        return;
+      }
+      btn.disabled = true; btn.textContent = "Listening…";
+      status.textContent = "Say something — checking your mic…";
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        status.textContent = "Mic access wasn't granted — this step is optional, continue whenever.";
+        btn.disabled = false; btn.textContent = "Try again";
+        return;
+      }
+      meter.hidden = false;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const bars = meter.querySelectorAll("span");
+      let heard = false, elapsed = 0;
+      const stop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        ctx.close();
+        meter.hidden = true;
+        btn.disabled = false;
+        if (heard) { status.textContent = "✓ Voice detected — your mic works."; btn.textContent = "Test again"; }
+        else { status.textContent = "Didn't catch any sound, but that's fine — continue anyway."; btn.textContent = "Try again"; }
+      };
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        const level = Math.min(1, avg / 60);
+        bars.forEach((b, i) => { b.style.transform = `scaleY(${Math.max(0.15, level * (1 - i * 0.12))})`; });
+        if (avg > 12) heard = true;
+        elapsed += 100;
+        if (elapsed < 4000) setTimeout(tick, 100); else stop();
+      };
+      tick();
+    };
   }
 
   function renderMeetings() {
@@ -198,8 +249,24 @@
 
   function renderShare(token){const [mid,hid]=token.split("--");const m=meeting(mid);const h=m.highlights.find(x=>x[0]===hid)||m.highlights[0];document.body.className="share-body";$("#app").innerHTML=`<main class="share-page"><div class="share-shell"><a href="#/meetings" class="share-brand"><span class="brand-mark"><span></span></span>Reverb</a><article class="share-card"><div class="share-video"><div><div class="eyebrow" style="color:#70d7df">Shared moment · ${time(h[3])}–${time(h[4])}</div><blockquote>“${esc(h[2])}”</blockquote><button class="button" style="margin-top:25px" id="clip-play">▶ Play ${time(h[4]-h[3])} clip</button></div></div><div class="share-info"><div class="eyebrow">${m.type} meeting</div><h1>${esc(h[1])}</h1><p class="subhead">From <strong>${esc(m.title)}</strong> · ${new Date(m.date).toLocaleDateString('en',{month:'long',day:'numeric',year:'numeric'})}</p><div class="meta">Shared by Hamza Farooq · No Reverb account required</div></div></article><p class="share-note">This is a seeded product demo. No private meeting content is used.</p></div></main>`;$("#clip-play").onclick=e=>{e.currentTarget.textContent=e.currentTarget.textContent.startsWith("▶")?"Ⅱ Pause clip":`▶ Play ${time(h[4]-h[3])} clip`;};}
 
-  function openSearch(){if($(".modal-backdrop"))return;const wrap=document.createElement("div");wrap.className="modal-backdrop";wrap.innerHTML=`<section class="modal" role="dialog" aria-modal="true" aria-labelledby="search-title"><div class="modal-head"><b>⌕</b><input id="global-query" class="input" placeholder="Search meetings, transcript, people, actions…" aria-label="Global search"><button class="button icon" id="close-search" aria-label="Close">×</button></div><div class="modal-body" id="results"><div class="empty"><div class="eyebrow">Try a search</div><p>SSO, Acme, residency, Priya, audit…</p></div></div></section>`;document.body.appendChild(wrap);const input=$("#global-query");input.focus();input.oninput=()=>renderSearchResults(input.value);$("#close-search").onclick=()=>wrap.remove();wrap.onclick=e=>{if(e.target===wrap)wrap.remove();};}
-  function renderSearchResults(q){const out=$("#results");if(!q.trim()){out.innerHTML=`<div class="empty"><p>Search across all meeting evidence.</p></div>`;return;}const l=q.toLowerCase();const results=[];meetings.forEach(m=>{if(`${m.title} ${m.summary} ${m.participants.map(p=>p[0]).join(' ')}`.toLowerCase().includes(l))results.push({m,t:"Meeting",title:m.title,text:m.summary,at:0});m.transcript.filter(s=>`${s[2]} ${s[3]}`.toLowerCase().includes(l)).slice(0,3).forEach(s=>results.push({m,t:"Transcript",title:`${s[2]} at ${time(s[0])}`,text:s[3],at:s[0]}));m.actions.filter(a=>`${a[1]} ${a[2]}`.toLowerCase().includes(l)).forEach(a=>results.push({m,t:"Action",title:a[1],text:`Owner: ${a[2]} · Due ${a[3]}`,at:a[4]}));});out.innerHTML=results.length?`<div class="result-group"><div class="result-label">${results.length} grounded results</div>${results.slice(0,12).map((r,i)=>`<button class="result" data-result="${r.m.id}" data-at="${r.at}"><span><strong>${esc(r.title)}</strong><p>${esc(r.text)}</p></span><span class="badge">${r.t}</span></button>`).join("")}</div>`:`<div class="empty"><h2>No matches</h2><p>Try a person, topic, or decision.</p></div>`;out.querySelectorAll("[data-result]").forEach(x=>x.onclick=()=>{state.currentTime=Number(x.dataset.at);document.querySelector(".modal-backdrop")?.remove();goto(`/meeting/${x.dataset.result}`);setTimeout(()=>{state.tab="transcript";renderMeeting(meeting(x.dataset.result));seek(meeting(x.dataset.result),Number(x.dataset.at));},30);});}
+  function globalAskAnswer(q){
+    const l=q.toLowerCase();
+    const allActions=meetings.flatMap(m=>m.actions.map(a=>({m,title:a[1],owner:a[2],at:a[4]})));
+    const allDecisions=meetings.flatMap(m=>m.decisions.map(d=>({m,text:d[0],at:d[1]})));
+    const cite=(m,at)=>`<button class="citation" data-goto="${m.id}" data-seek="${at}">${esc(m.title)} · ${time(at)}</button>`;
+    let text;
+    if(/owner|who owns|assign/.test(l)) text=allActions.slice(0,4).map(a=>`<strong>${esc(a.owner)}</strong> owns ${esc(a.title.toLowerCase())} ${cite(a.m,a.at)}`).join("; ")+".";
+    else if(/action|next|follow.?up|to.?do/.test(l)) text=allActions.slice(0,4).map(a=>`${esc(a.title)} — <strong>${esc(a.owner)}</strong> ${cite(a.m,a.at)}`).join("; ")+".";
+    else {
+      const stop=["what","were","which","meetings","meeting","about","there","decide","decided","decision","decisions"];
+      const keyword=l.replace(/[^a-z0-9 ]/g," ").split(" ").filter(w=>w.length>3&&!stop.includes(w))[0];
+      const matched=keyword?allDecisions.filter(d=>d.text.toLowerCase().includes(keyword)):[];
+      text=(matched.length?matched:allDecisions).slice(0,3).map(d=>`${esc(d.text)} ${cite(d.m,d.at)}`).join(" ");
+    }
+    return {title:`Across ${meetings.length} meetings`,text};
+  }
+  function openSearch(){if($(".modal-backdrop"))return;const wrap=document.createElement("div");wrap.className="modal-backdrop";wrap.innerHTML=`<section class="modal" role="dialog" aria-modal="true" aria-labelledby="search-title"><div class="modal-head"><b>⌕</b><input id="global-query" class="input" placeholder="Search, or ask a question across meetings…" aria-label="Global search or ask"><button class="button icon" id="close-search" aria-label="Close">×</button></div><div class="modal-body" id="results"><div class="empty"><div class="eyebrow">Try a search or a question</div><p>SSO, Acme, residency, Priya, audit — or "What did we decide about SSO?"</p></div></div></section>`;document.body.appendChild(wrap);const input=$("#global-query");input.focus();input.oninput=()=>renderSearchResults(input.value);$("#close-search").onclick=()=>wrap.remove();wrap.onclick=e=>{if(e.target===wrap)wrap.remove();};}
+  function renderSearchResults(q){const out=$("#results");if(!q.trim()){out.innerHTML=`<div class="empty"><p>Search across all meeting evidence, or ask a question.</p></div>`;return;}const l=q.toLowerCase();const isQuestion=/\?|^\s*(what|who|which|when|how|why|does|is|are|can|did)\b/.test(l);const results=[];meetings.forEach(m=>{if(`${m.title} ${m.summary} ${m.participants.map(p=>p[0]).join(' ')}`.toLowerCase().includes(l))results.push({m,t:"Meeting",title:m.title,text:m.summary,at:0});m.transcript.filter(s=>`${s[2]} ${s[3]}`.toLowerCase().includes(l)).slice(0,3).forEach(s=>results.push({m,t:"Transcript",title:`${s[2]} at ${time(s[0])}`,text:s[3],at:s[0]}));m.actions.filter(a=>`${a[1]} ${a[2]}`.toLowerCase().includes(l)).forEach(a=>results.push({m,t:"Action",title:a[1],text:`Owner: ${a[2]} · Due ${a[3]}`,at:a[4]}));});const ask=isQuestion?globalAskAnswer(q):null;const askHTML=ask?`<div class="answer ask-global"><strong>✦ ${esc(ask.title)}</strong><p>${ask.text}</p></div>`:"";const listHTML=results.length?`<div class="result-group"><div class="result-label">${results.length} grounded results</div>${results.slice(0,12).map((r,i)=>`<button class="result" data-result="${r.m.id}" data-at="${r.at}"><span><strong>${esc(r.title)}</strong><p>${esc(r.text)}</p></span><span class="badge">${r.t}</span></button>`).join("")}</div>`:(ask?"":`<div class="empty"><h2>No matches</h2><p>Try a person, topic, or decision.</p></div>`);out.innerHTML=askHTML+listHTML;out.querySelectorAll("[data-result]").forEach(x=>x.onclick=()=>{state.currentTime=Number(x.dataset.at);document.querySelector(".modal-backdrop")?.remove();goto(`/meeting/${x.dataset.result}`);setTimeout(()=>{state.tab="transcript";renderMeeting(meeting(x.dataset.result));seek(meeting(x.dataset.result),Number(x.dataset.at));},30);});out.querySelectorAll("[data-goto]").forEach(x=>x.onclick=()=>{const id=x.dataset.goto,at=Number(x.dataset.seek);document.querySelector(".modal-backdrop")?.remove();goto(`/meeting/${id}`);setTimeout(()=>{state.tab="transcript";renderMeeting(meeting(id));seek(meeting(id),at);},30);});}
 
   function renderNotFound(){$("#main").innerHTML=`<div class="empty"><div class="eyebrow">404</div><h1>That moment is missing.</h1><p>The link may be incomplete.</p><button class="button primary" data-go="/meetings">Return to meetings</button></div>`;$("[data-go]").onclick=e=>goto(e.currentTarget.dataset.go);}
   function wireShell(){document.querySelectorAll("[data-go]").forEach(x=>x.onclick=()=>goto(x.dataset.go));document.querySelectorAll(".js-search").forEach(x=>x.onclick=openSearch);const mm=$(".js-menu");if(mm)mm.onclick=()=>{$(".sidebar").classList.toggle("open");};}
