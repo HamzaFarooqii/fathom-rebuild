@@ -1,5 +1,7 @@
 $ErrorActionPreference = "Stop"
 
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+
 function Write-HookResult {
     param([string]$SystemMessage)
 
@@ -16,6 +18,63 @@ function Write-HookResult {
 
 function Get-UtcTimestamp {
     return (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+}
+
+function Get-TranscriptPrompt {
+    param([string]$TranscriptPath)
+
+    if ([string]::IsNullOrWhiteSpace($TranscriptPath) -or -not (Test-Path -LiteralPath $TranscriptPath)) {
+        return $null
+    }
+
+    $items = Get-Content -LiteralPath $TranscriptPath | ForEach-Object {
+        try { $_ | ConvertFrom-Json -Depth 32 } catch { $null }
+    }
+
+    # Desktop-created tasks carry their user-authored prompt in the delegation
+    # envelope rather than as a normal role=user transcript message.
+    $delegated = $items |
+        Where-Object {
+            $_.type -eq "response_item" -and
+            $_.payload.type -eq "function_call_output" -and
+            [string]$_.payload.output -match "<codex_delegation>"
+        } |
+        Select-Object -Last 1
+
+    if ($delegated) {
+        $match = [regex]::Match([string]$delegated.payload.output, "(?s)<input>(.*?)</input>")
+        if ($match.Success) {
+            return [pscustomobject]@{
+                Text = $match.Groups[1].Value.Trim()
+                Timestamp = ([datetime]$delegated.timestamp).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            }
+        }
+    }
+
+    $userMessage = $items |
+        Where-Object {
+            $_.type -eq "response_item" -and
+            $_.payload.type -eq "message" -and
+            $_.payload.role -eq "user"
+        } |
+        Select-Object -Last 1
+
+    if ($userMessage) {
+        $parts = @($userMessage.payload.content |
+            Where-Object {
+                $_.type -eq "input_text" -and
+                $_.text -notmatch "^<(recommended_plugins|environment_context)>"
+            } |
+            ForEach-Object { [string]$_.text })
+        if ($parts.Count -gt 0) {
+            return [pscustomobject]@{
+                Text = ($parts -join "`n").Trim()
+                Timestamp = ([datetime]$userMessage.timestamp).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            }
+        }
+    }
+
+    return $null
 }
 
 function Set-FrontmatterValue {
@@ -107,6 +166,31 @@ $($event.prompt)
             Add-Content -LiteralPath $logPath -Value $entry -Encoding utf8NoBOM
         }
         "Stop" {
+            if ($promptCount -le $responseCount) {
+                $transcriptPrompt = Get-TranscriptPrompt -TranscriptPath ([string]$event.transcript_path)
+                if ($transcriptPrompt -and -not [string]::IsNullOrWhiteSpace($transcriptPrompt.Text)) {
+                    $entryNumber = $promptCount + 1
+                    $content = Get-Content -LiteralPath $logPath -Raw
+                    if ($promptCount -eq 0) {
+                        $content = Set-FrontmatterValue -Content $content -Key "first_prompt_time" -Value $transcriptPrompt.Timestamp
+                    }
+                    $content = Set-FrontmatterValue -Content $content -Key "last_prompt_time" -Value $transcriptPrompt.Timestamp
+                    Set-Content -LiteralPath $logPath -Value $content.TrimEnd() -Encoding utf8NoBOM
+
+                    $promptEntry = @"
+
+
+[LOG_ENTRY type=PROMPT num=$entryNumber session=$sessionId]
+timestamp: $($transcriptPrompt.Timestamp)
+model: $model
+
+$($transcriptPrompt.Text)
+"@
+                    Add-Content -LiteralPath $logPath -Value $promptEntry -Encoding utf8NoBOM
+                    $promptCount = $entryNumber
+                }
+            }
+
             if ($promptCount -gt $responseCount -and $null -ne $event.last_assistant_message) {
                 $entryNumber = $responseCount + 1
                 $entry = @"
