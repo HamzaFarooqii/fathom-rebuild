@@ -4,8 +4,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
-
 function Write-HookResult {
     param([string]$SystemMessage)
 
@@ -39,6 +37,21 @@ function Add-Utf8NoBom {
     [System.IO.File]::AppendAllText($Path, "$Value`r`n", [System.Text.UTF8Encoding]::new($false))
 }
 
+# Same root cause as the write side: Get-Content with no -Encoding guesses
+# the system codepage on Windows PowerShell 5.1 instead of reading UTF-8,
+# which is how "CAPTURE TEST — ..." became "CAPTURE TEST â€” ..." in logged
+# entries even after the stdin decode was fixed -- the corruption was
+# happening here, on every file read, not on the stdin read.
+function Read-Utf8Text {
+    param([string]$Path)
+    return [System.IO.File]::ReadAllText($Path, [System.Text.UTF8Encoding]::new($false))
+}
+
+function Read-Utf8Lines {
+    param([string]$Path)
+    return [System.IO.File]::ReadAllLines($Path, [System.Text.UTF8Encoding]::new($false))
+}
+
 function Get-TranscriptPrompt {
     param([string]$TranscriptPath)
 
@@ -46,8 +59,12 @@ function Get-TranscriptPrompt {
         return $null
     }
 
-    $items = Get-Content -LiteralPath $TranscriptPath | ForEach-Object {
-        try { $_ | ConvertFrom-Json -Depth 32 } catch { $null }
+    # -Depth is not a valid ConvertFrom-Json parameter on Windows PowerShell
+    # 5.1 (only PowerShell 7+/pwsh accepts it) -- passing it there throws a
+    # ParameterBindingException that this try/catch was silently swallowing,
+    # so every line failed to parse and the fallback never found anything.
+    $items = Read-Utf8Lines -Path $TranscriptPath | ForEach-Object {
+        try { $_ | ConvertFrom-Json } catch { $null }
     }
 
     # Desktop-created tasks carry their user-authored prompt in the delegation
@@ -103,10 +120,10 @@ function Get-TranscriptModel {
         return $null
     }
 
-    $lines = Get-Content -LiteralPath $TranscriptPath
+    $lines = Read-Utf8Lines -Path $TranscriptPath
     for ($i = $lines.Count - 1; $i -ge 0; $i--) {
         if ([string]::IsNullOrWhiteSpace($lines[$i])) { continue }
-        try { $item = $lines[$i] | ConvertFrom-Json -Depth 32 } catch { continue }
+        try { $item = $lines[$i] | ConvertFrom-Json } catch { continue }
         if ($item.message.model) {
             return [string]$item.message.model
         }
@@ -126,7 +143,14 @@ function Set-FrontmatterValue {
 }
 
 try {
-    $rawInput = [Console]::In.ReadToEnd()
+    # [Console]::InputEncoding only affects an interactive console, not a
+    # redirected/piped stdin (which is what a hook subprocess always gets) --
+    # it was silently ignored, so a piped UTF-8 em dash decoded as CP1252
+    # mojibake ("â€”"). Wrapping the raw stdin stream in our own UTF-8
+    # StreamReader decodes it correctly regardless of redirection.
+    $stdin = [Console]::OpenStandardInput()
+    $reader = New-Object System.IO.StreamReader($stdin, [System.Text.UTF8Encoding]::new($false))
+    $rawInput = $reader.ReadToEnd()
     if ([string]::IsNullOrWhiteSpace($rawInput)) {
         throw "Hook received no event payload."
     }
@@ -181,7 +205,7 @@ Session: ``$shortSessionId`` | Project: ``fathom-rebuild`` | Author: ``HamzaFaro
             # An earlier event in this session (before the transcript had any
             # assistant turns yet) may have written "model: unknown" into the
             # frontmatter. Keep it current once a real model becomes known.
-            $existing = Get-Content -LiteralPath $logPath -Raw
+            $existing = Read-Utf8Text -Path $logPath
             $patched = Set-FrontmatterValue -Content $existing -Key "model" -Value $model
             if ($patched -ne $existing) {
                 Write-Utf8NoBom -Path $logPath -Value $patched.TrimEnd()
@@ -189,7 +213,7 @@ Session: ``$shortSessionId`` | Project: ``fathom-rebuild`` | Author: ``HamzaFaro
         }
     }
 
-    $content = Get-Content -LiteralPath $logPath -Raw
+    $content = Read-Utf8Text -Path $logPath
     $promptCount = [regex]::Matches($content, '\[LOG_ENTRY type=PROMPT').Count
     $responseCount = [regex]::Matches($content, '\[LOG_ENTRY type=RESPONSE').Count
 
@@ -218,7 +242,7 @@ $($event.prompt)
                 $transcriptPrompt = Get-TranscriptPrompt -TranscriptPath ([string]$event.transcript_path)
                 if ($transcriptPrompt -and -not [string]::IsNullOrWhiteSpace($transcriptPrompt.Text)) {
                     $entryNumber = $promptCount + 1
-                    $content = Get-Content -LiteralPath $logPath -Raw
+                    $content = Read-Utf8Text -Path $logPath
                     if ($promptCount -eq 0) {
                         $content = Set-FrontmatterValue -Content $content -Key "first_prompt_time" -Value $transcriptPrompt.Timestamp
                     }
@@ -251,7 +275,7 @@ model: $model
 $($event.last_assistant_message)
 "@
                 Add-Utf8NoBom -Path $logPath -Value $entry
-                $updated = Get-Content -LiteralPath $logPath -Raw
+                $updated = Read-Utf8Text -Path $logPath
                 $updated = Set-FrontmatterValue -Content $updated -Key "total_exchanges" -Value ([string]$entryNumber)
                 Write-Utf8NoBom -Path $logPath -Value $updated.TrimEnd()
             }
