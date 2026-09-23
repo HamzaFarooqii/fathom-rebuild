@@ -56,6 +56,20 @@ Screenshots from this pass: `recon/screenshots/fathom-signin-real.png`, `fathom-
 
 A real recorded meeting was not produced, so the processed-meeting view (playback against transcript, generated summary, template switching, action-item extraction, and post-call highlight creation on an actual Fathom recording) was not independently re-verified beyond the help-center documentation already cited above. This is a real, disclosed gap in primary research, not something to gloss over — the rebuild's fidelity for that specific surface rests on secondary sources (Fathom's own help articles) rather than a first-hand recording.
 
+## Marketing-site deep dive (unauthenticated, third pass)
+
+Fathom's own `/overview` page turns out to carry real product UI mockups and specifics that the earlier home/help-doc pass didn't surface, fully reachable without an account:
+
+- **Fathom is now part of Superhuman** (a recent acquisition banner on the homepage) — current company context, not a rebuild concern, but worth knowing the product is mid-transition, which explains the mixed legacy/new UI patterns noted in the authenticated pass above.
+- **Three capture modes, chosen per-meeting, not just one bot/no-bot toggle**: "Audio & video," "Audio," and "Transcript only" — the last explicitly marketed as bot-free ("No bot. Just a clean transcript, AI summary, and action items. Perfect for sensitive conversations or when a bot isn't welcome."). This is more nuanced than "the bot is stubbed" — it's a real, user-facing choice about *how much* to capture, independent of whether a bot joins visibly.
+- **Summaries update live, during the call**, not only after it ends — "Live summaries update as you talk, so when you lose the thread, you can quickly catch up without missing a beat." The rebuild has no in-progress-meeting state at all (everything is post-call), which is a reasonable and disclosed scope cut given the assignment's own emphasis on the *post*-meeting workflow, but it's a real product surface this rebuild doesn't attempt.
+- **A private, per-meeting scratchpad** during the call — personal notes by default, or `@mention` a teammate to start a thread on a note before the call even ends.
+- **The real meeting-detail tab bar is `Summary / Action Items / Comments / Transcript / Related`** — not the `Summary / Transcript / Ask` structure the earlier help-doc pass inferred. `Comments` (threaded discussion on a meeting) and `Related` (linked meetings) are both features this rebuild does not have; `Ask` and `Highlights`, which this rebuild does have as their own tabs, aren't top-level tabs in the real product at all — Ask lives in the persistent side panel (see the authenticated-pass findings above) and highlights surface elsewhere. The rebuild's tab structure is a deliberate simplification for a 24-hour build, not an attempt to mirror this exactly.
+- **Desktop and iOS apps** handle meeting reminders, one-click join, and in-person (non-video-call) capture — entirely out of scope for a web rebuild, noted for completeness.
+- Cross-meeting Ask includes an explicit **scope selector** ("All meetings / Team meetings / My meetings") — the rebuild's global Ask (see the Claude Code session that added it) doesn't scope by team/mine since there's only one seeded user, but the underlying idea — pick how wide the question searches — matches what was already built.
+
+None of this changes the scope decision (post-meeting intelligence over live-call features and bot engineering); it makes the disclosed gaps and simplifications more precise. Screenshots: `recon/screenshots/fathom-home-marketing.png`, `fathom-capture-modes.png`, `fathom-transcription-speakers.png`, `fathom-live-summary-scratchpad.png`, `fathom-ask-across-meetings.png`.
+
 ## Sources
 
 - [Fathom overview](https://www.fathom.ai/overview)
