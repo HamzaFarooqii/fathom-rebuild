@@ -12,7 +12,11 @@ Open the live URL → land on onboarding. Point out the fourth onboarding step, 
 
 "Everything else in onboarding is explicitly simulated — this one isn't. It's a real microphone check, same idea as Fathom's own test-call step, just done with a live Web Audio meter instead of a static checkmark."
 
-Then click "Open the 60-minute meeting" once, and navigate back to `#/meetings`.
+Point out the capture-mode picker below it — Audio & video / Audio only / Transcript only. Click "Transcript only."
+
+"Fathom actually offers this exact choice — audio-and-video, audio-only, or a fully bot-free transcript-only mode. I found that on their marketing site and it seemed worth reflecting here — watch what happens to the player."
+
+Then click "Open the 60-minute meeting" once — the player stage will show the transcript-only state instead of video tiles. Switch back to Audio & video from onboarding if you want the fuller look for the rest of the demo, then navigate back to `#/meetings`.
 
 "Meeting library: seeded with a 2-minute internal check-in, a 30-minute customer call, and a dense 60-minute, 8-person product council — that last one is the stress-test case. Filters, per-meeting metadata, and workspace stats are all live against the same data model."
 

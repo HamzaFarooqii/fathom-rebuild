@@ -18,6 +18,13 @@
   const saveCustomHighlights = x => localStorage.setItem("reverb-highlights", JSON.stringify(x));
   const allHighlights = m => [...m.highlights, ...(customHighlights()[m.id] || [])];
   const toast = msg => { const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); };
+  const CAPTURE_MODES = {
+    video: { label: "Audio & video", icon: "🎥", desc: "Full recording, speaker video tiles included." },
+    audio: { label: "Audio only", icon: "🎙", desc: "Voice captured, no video stored." },
+    transcript: { label: "Transcript only", icon: "📝", desc: "Bot-free — a clean transcript, summary, and action items. No audio or video is recorded at all." }
+  };
+  const captureMode = () => CAPTURE_MODES[localStorage.getItem("reverb-capture-mode")] ? localStorage.getItem("reverb-capture-mode") : "video";
+  const saveCaptureMode = m => localStorage.setItem("reverb-capture-mode", m);
 
   function icon(name) {
     return ({meetings:"▦",highlights:"✦",search:"⌕",settings:"⚙",help:"?"})[name] || "•";
@@ -89,13 +96,29 @@
           <div class="step"><span class="step-num">04</span><div><strong>Voice check</strong><br><small id="mic-status">Optional — like Fathom's own test call, confirms your mic actually works</small></div><button class="button small" id="mic-test-btn" type="button">Test call</button></div>
         </div>
         <div class="mic-meter" id="mic-meter" hidden aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="capture-mode-picker">
+          <div class="eyebrow" style="margin:0 0 8px">How should meetings be captured?</div>
+          <div class="mode-row" id="mode-row" role="radiogroup" aria-label="Capture mode">${Object.entries(CAPTURE_MODES).map(([k,v])=>`<button type="button" class="mode-pill ${captureMode()===k?'active':''}" role="radio" aria-checked="${captureMode()===k}" data-mode="${k}">${v.icon} ${v.label}</button>`).join("")}</div>
+          <p class="mode-desc" id="mode-desc">${CAPTURE_MODES[captureMode()].desc}</p>
+        </div>
         <button class="button accent" id="enter-demo">Open the 60-minute meeting <span>→</span></button>
         <button class="button ghost" style="margin-top:9px" data-go="/meetings">Browse all meetings</button>
       </section>
     </main>`;
     $("#enter-demo").onclick = () => goto("/meeting/q4-council");
     wireMicTest();
+    wireCaptureModePicker();
     $("[data-go]").onclick = e => goto(e.currentTarget.dataset.go);
+  }
+
+  function wireCaptureModePicker() {
+    const row = $("#mode-row"), desc = $("#mode-desc");
+    if (!row) return;
+    row.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => {
+      saveCaptureMode(b.dataset.mode);
+      row.querySelectorAll("[data-mode]").forEach(x => { x.classList.toggle("active", x === b); x.setAttribute("aria-checked", x === b); });
+      desc.textContent = CAPTURE_MODES[b.dataset.mode].desc;
+    });
   }
 
   function wireMicTest() {
@@ -177,7 +200,13 @@
   }
 
   function player(m) {
-    return `<section class="panel player" aria-label="Simulated meeting player"><div class="stage"><span class="simulated">● Simulated recording</span><div class="stage-grid">${m.participants.map((p,i)=>`<div class="participant-tile" data-speaker="${esc(p[0])}">${avatar(p,"md")}<span>${esc(p[0])}</span></div>`).join("")}</div></div><div class="player-controls"><div class="timeline" id="timeline" role="slider" aria-label="Meeting timeline" aria-valuemin="0" aria-valuemax="${m.duration}" tabindex="0"><div class="timeline-track"><div class="timeline-fill" id="timeline-fill"></div></div>${m.topics.slice(1).map(t=>`<span class="topic-mark" style="left:${t[0]/m.duration*100}%" title="${t[1]}"></span>`).join("")}${allHighlights(m).map(h=>`<button class="marker" style="left:${h[3]/m.duration*100}%" data-seek="${h[3]}" title="${esc(h[1])}"></button>`).join("")}</div><div class="control-row"><button id="play" class="play" aria-label="Play meeting">▶</button><span class="timecode"><b id="current-time">0:00</b> / ${time(m.duration)}</span><button class="button small" data-skip="-15">−15</button><button class="button small" data-skip="15">+15</button><span class="now-speaking" id="now-speaking">Ready to review</span></div></div></section>`;
+    const mode = captureMode();
+    const modeInfo = CAPTURE_MODES[mode];
+    const label = mode === "transcript" ? `● Simulated · ${modeInfo.label} (bot-free)` : `● Simulated · ${modeInfo.label}`;
+    const stageBody = mode === "transcript"
+      ? `<div class="stage-transcript-only"><span class="stage-transcript-icon">📝</span><p>Transcript-only capture — no audio or video is recorded, just text, speaker labels, and timing.</p></div>`
+      : `<div class="stage-grid">${m.participants.map((p,i)=>`<div class="participant-tile" data-speaker="${esc(p[0])}">${avatar(p,"md")}<span>${esc(p[0])}</span></div>`).join("")}</div>`;
+    return `<section class="panel player" aria-label="Simulated meeting player"><div class="stage"><span class="simulated">${label}</span>${stageBody}</div><div class="player-controls"><div class="timeline" id="timeline" role="slider" aria-label="Meeting timeline" aria-valuemin="0" aria-valuemax="${m.duration}" tabindex="0"><div class="timeline-track"><div class="timeline-fill" id="timeline-fill"></div></div>${m.topics.slice(1).map(t=>`<span class="topic-mark" style="left:${t[0]/m.duration*100}%" title="${t[1]}"></span>`).join("")}${allHighlights(m).map(h=>`<button class="marker" style="left:${h[3]/m.duration*100}%" data-seek="${h[3]}" title="${esc(h[1])}"></button>`).join("")}</div><div class="control-row"><button id="play" class="play" aria-label="Play meeting">▶</button><span class="timecode"><b id="current-time">0:00</b> / ${time(m.duration)}</span><button class="button small" data-skip="-15">−15</button><button class="button small" data-skip="15">+15</button><span class="now-speaking" id="now-speaking">Ready to review</span></div></div></section>`;
   }
 
   function renderTab(m) {
