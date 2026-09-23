@@ -1,8 +1,9 @@
 node_modules/
 .next/
 out/
-dist/
+# `dist/` is the deployable source for this dependency-free static build; do not ignore it.
 .vercel/
+.openai/
 .env
 .env.*
 !.env.example

@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) 'scripts/capture-agent-turn.ps1')\"",
-            "timeout": 10,
+            "timeout": 30,
             "statusMessage": "Recording prompt"
           }
         ]
@@ -19,7 +19,7 @@
           {
             "type": "command",
             "command": "pwsh -NoProfile -Command \"& (Join-Path (git rev-parse --show-toplevel) 'scripts/capture-agent-turn.ps1')\"",
-            "timeout": 10,
+            "timeout": 30,
             "statusMessage": "Recording response"
           }
         ]
