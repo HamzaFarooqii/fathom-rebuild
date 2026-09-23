@@ -1,3 +1,7 @@
+param(
+    [string]$Tool = "codex-desktop"
+)
+
 $ErrorActionPreference = "Stop"
 
 [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
@@ -122,7 +126,7 @@ session_id: $sessionId
 date: $date
 author: HamzaFarooqii
 model: $model
-tool: codex-desktop
+tool: $Tool
 project: fathom-rebuild
 total_exchanges: 0
 first_prompt_time: pending
