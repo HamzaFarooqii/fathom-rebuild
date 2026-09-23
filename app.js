@@ -25,11 +25,13 @@
     const r = route();
     if (r === "/" || r === "/onboarding") return renderOnboarding();
     if (r.startsWith("/share/")) return renderShare(r.split("/")[2]);
+    const meetingId = r.startsWith("/meeting/") ? r.split("/")[2] : null;
+    const found = meetingId ? meetings.find(m => m.id === meetingId) : null;
     document.body.className = "app-body";
-    $("#app").innerHTML = shell(r, r.startsWith("/meeting/") ? meeting(r.split("/")[2]) : null);
+    $("#app").innerHTML = shell(r, found);
     if (r === "/meetings") renderMeetings();
     else if (r === "/highlights") renderHighlights();
-    else if (r.startsWith("/meeting/")) renderMeeting(meeting(r.split("/")[2]));
+    else if (meetingId && found) renderMeeting(found);
     else renderNotFound();
     wireShell();
   }
