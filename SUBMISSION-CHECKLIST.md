@@ -3,8 +3,8 @@
 ## Capture integrity
 
 - [x] Codex canary session passed (two independent sessions, see `CAPTURE-TEST.md`)
-- [ ] Claude Code canary session passed — hooks are wired in `.claude/settings.json` and reuse the verified capture script, but firing is currently gated by Claude Code's per-project trust flag (`hasTrustDialogAccepted`), which is `false` for this folder and can only be set by a human running `claude` interactively once in this repo and accepting the trust prompt. Not yet confirmed.
-- [x] `CAPTURE-TEST.md` contains raw canary entries (Codex)
+- [x] Claude Code canary session passed (two independent fresh `claude -p` sessions, see `CAPTURE-TEST.md`) — turned out not to be the trust flag after all; three real Windows PowerShell 5.1 bugs in the shared capture script (an unsupported `-Depth` parameter, an unsupported `-Encoding utf8NoBOM` parameter, and stdin/file reads defaulting to the system codepage instead of UTF-8) were silently breaking every Claude Code hook invocation. All three fixed; verified clean.
+- [x] `CAPTURE-TEST.md` contains raw canary entries (both tools)
 - [x] `.agent-logs/` is tracked and contains no secrets
 - [x] Logs were committed throughout the build, not dumped at the end
 
@@ -40,6 +40,5 @@
 
 ## Outstanding before final hand-in
 
-1. You run `claude` once interactively in this repo folder to accept the trust prompt, so Claude Code's capture hooks start firing (see Capture integrity above).
-2. Record the walkthrough video and drop the link into `docs/SUBMISSION.md`.
-3. Merge `codex/fathom-rebuild` into `main` (or open/merge a PR) so the repository's default branch reflects the finished state — everything so far has been committed to the feature branch per git discipline.
+1. Review and merge [PR #1](https://github.com/HamzaFarooqii/fathom-rebuild/pull/1) so `main` reflects the finished state — everything so far has been committed to the `codex/fathom-rebuild` feature branch per git discipline.
+2. Record the walkthrough video (script at `docs/WALKTHROUGH_SCRIPT.md`) and drop the link into `docs/SUBMISSION.md`.
