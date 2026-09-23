@@ -112,12 +112,16 @@ h3 { font-size: 14px; }
 .transcript-tools { display: flex; gap: 8px; margin-bottom: 16px; position: sticky; top: 72px; background: white; padding: 0 0 12px; z-index: 4; }
 .input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: white; }
 .transcript { max-height: 650px; overflow: auto; padding-right: 5px; scroll-behavior: smooth; }
-.segment { display: grid; grid-template-columns: 74px 1fr; gap: 12px; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; }
+.segment { display: grid; grid-template-columns: 74px 1fr 30px; gap: 12px; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; align-items: start; }
 .segment:hover { background: #f8f8fc; }
 .segment.active { background: var(--accent-soft); border-color: #d8d9ff; }
 .speaker { font-size: 10px; font-weight: 800; }
 .segment-time { display: block; color: var(--accent); font: 500 9px DM Mono, monospace; margin-top: 4px; }
 .segment-text { color: #465066; line-height: 1.6; font-size: 12px; }
+.mark-highlight { width: 26px; height: 26px; border: 1px solid var(--line); background: white; border-radius: 8px; color: var(--muted); cursor: pointer; font-size: 12px; opacity: 0; transition: opacity .12s, color .12s, border-color .12s; }
+.segment:hover .mark-highlight, .mark-highlight:focus-visible { opacity: 1; }
+.mark-highlight:hover { color: var(--accent); border-color: #c7c9ff; }
+.mark-highlight:disabled { opacity: 1; color: var(--green); cursor: default; }
 .check-row { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; padding: 13px 0; border-top: 1px solid var(--line); align-items: start; }
 .check-row:first-child { border: 0; }
 .check-row input { width: 17px; height: 17px; accent-color: var(--accent); }
@@ -216,7 +220,8 @@ h3 { font-size: 14px; }
   .stage-grid { grid-template-columns: repeat(2,1fr); }
   .stage { min-height: 330px; }
   .participant-tile:nth-child(n+5) { display: none; }
-  .segment { grid-template-columns: 62px 1fr; padding: 10px 6px; }
+  .segment { grid-template-columns: 62px 1fr 26px; padding: 10px 6px; }
+  .mark-highlight { opacity: 1; }
   .share-page { padding: 14px; }
   .share-video { min-height: 300px; }
 }

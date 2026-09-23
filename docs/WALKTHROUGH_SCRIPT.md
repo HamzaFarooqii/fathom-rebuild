@@ -32,7 +32,8 @@ Open the 60-minute/8-person meeting.
 
 - Switch the summary template dropdown General → Executive → Sales, instantly.
 - Actions tab: check off an item, reload/re-open the meeting to show completion persisted.
-- Highlights tab: open a highlight, click "Public clip."
+- Transcript tab: hover a segment, click the ✦ button to create a highlight on the spot.
+- Highlights tab: show the one you just created (tagged "Yours"), then open one, click "Public clip."
 
 ## 3:00–3:40 — Public share page
 

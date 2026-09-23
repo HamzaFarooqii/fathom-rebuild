@@ -6,14 +6,14 @@ This rebuild focuses on the post-meeting intelligence loop: find a meeting, unde
 
 ## Included
 
-- A lightweight onboarding flow that explains the demo and simulates calendar connection
+- A lightweight onboarding flow that explains the demo, simulates calendar connection, and includes one genuinely functional step — a real, working microphone check (Web Audio API), rather than another static checkmark
 - A seeded meeting library with realistic short, medium, and one-hour meetings
 - A meeting detail workspace with simulated playback, scrubbing, timestamp navigation, and transcript follow mode
 - Switchable General, Executive, and Sales summary templates
 - Actions and decisions with persistent completion state
-- Highlights and clips that jump to exact moments
+- Highlights and clips that jump to exact moments, including creating a new highlight directly from any transcript segment (persisted to this browser, removable, immediately shareable)
 - A public, account-free clip view with a shareable URL
-- Global search across meetings, people, transcript text, actions, and decisions
+- Global search across meetings, people, transcript text, actions, and decisions, plus a workspace-level "Ask across meetings" that answers natural-language questions with citations spanning all seeded meetings, not just one
 - A deterministic Ask experience with timestamped citations
 - A credible 60-minute, eight-person meeting designed to stress the interface
 - Responsive layouts, keyboard access, visible focus states, and reduced-motion support
