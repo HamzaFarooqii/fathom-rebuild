@@ -1,71 +1,174 @@
-# Walkthrough script (target: under 5 minutes)
+# Reverb walkthrough runbook
 
-Camera on. Screen-share the live deployment, not localhost.
+Target length: **4:30–4:45**. Hard limit: **5:00**.
+Required: **camera on**, live deployment on screen, and no localhost footage.
 
-## 0:00–0:30 — Framing
+Live app: https://hamzafarooqii.github.io/fathom-rebuild/
 
-"This is Reverb, a rebuild of Fathom's post-meeting workflow for the 8x assignment. I studied Fathom's real product and help docs first — that research and my scope decisions are written up in `docs/PRODUCT_RESEARCH.md` and `docs/SCOPE_DECISION.md`. The bet: the recording bot is a commodity, so I stubbed it and put the time into the part that actually creates value — turning a call into something you can verify and act on afterward."
+## Before you record
 
-## 0:30–1:00 — Dashboard
+Do this once, before pressing Record:
 
-Open the live URL → land on onboarding. Point out the fourth onboarding step, "Voice check" — click "Test call" and let it actually listen for a couple of seconds.
+1. Use Chrome or Edge at 100% zoom with a 1440×900 or larger recording area.
+2. Close email, chat, password managers, personal tabs, and notifications.
+3. Put your camera bubble in the lower-left corner. Do not cover the top-right Share/Ask buttons or the right-side meeting panel.
+4. Open the live app at `#/onboarding` and confirm it loads while signed out.
+5. Select **Audio & video** in the capture-mode picker so the eight-person stage appears during the demo.
+6. Open `#/meeting/q4-council`, go to Actions, and make sure the first action is unchecked. If it is already checked, click it once to reset it.
+7. Remove any highlight tagged **Yours** so the highlight you create during the recording is obvious.
+8. Return to `#/onboarding` and stop clicking.
+9. Test your microphone and camera in the recording tool. Do not run Reverb's microphone test during the final walkthrough; the browser permission prompt can waste time.
+10. Start screen recording with your camera visible, wait one second, then begin speaking.
 
-"Everything else in onboarding is explicitly simulated — this one isn't. It's a real microphone check, same idea as Fathom's own test-call step, just done with a live Web Audio meter instead of a static checkmark."
+Keep the mouse still while you speak. Click only when the matching instruction below says to click.
 
-Point out the capture-mode picker below it — Audio & video / Audio only / Transcript only. Click "Transcript only."
+## Exact recording workflow
 
-"Fathom actually offers this exact choice — audio-and-video, audio-only, or a fully bot-free transcript-only mode. I found that on their marketing site and it seemed worth reflecting here — watch what happens to the player."
+### 0:00–0:25 — Introduce the product
 
-Then click "Open the 60-minute meeting" once — the player stage will show the transcript-only state instead of video tiles. Switch back to Audio & video from onboarding if you want the fuller look for the rest of the demo, then navigate back to `#/meetings`.
+**Show:** Onboarding page, camera visible.
 
-"Meeting library: seeded with a 2-minute internal check-in, a 30-minute customer call, and a dense 60-minute, 8-person product council — that last one is the stress-test case. Filters, per-meeting metadata, and workspace stats are all live against the same data model."
+**Say:**
 
-## 1:00–2:15 — Long meeting detail (the core loop)
+> Hi, I’m Hamza. This is Reverb, my rebuild of Fathom for the 8x assignment. I researched Fathom’s real onboarding, meeting detail, summaries, search, Ask, highlights, and sharing before I wrote the product. I focused the build on the highest-value loop: turning a meeting into decisions and actions that anyone can verify against the exact moment.
 
-Open the 60-minute/8-person meeting.
+### 0:25–0:55 — Explain onboarding and scope
 
-"This is the highest-priority surface. Timeline with topic markers and highlight markers, 8-person stage. I'll hit play, then jump around."
+**Do:** Point at the completed onboarding steps, the optional Voice check, and the three capture-mode choices. Do not click **Test call**.
 
-- Click a topic chip on the timeline → note the player time and "now speaking" update.
-- Switch to the Transcript tab → click a timestamp on a segment → show the transcript scrolling and highlighting in sync with playback position, then toggle "Resume/Following" after manually scrolling.
-- Click a citation button inside the Summary tab → show it seeking playback directly from cited evidence.
+**Say:**
 
-"Every AI claim in this product links back to a timestamp. That was the single principle from my research I built the whole detail page around."
+> This onboarding is intentionally lightweight. Calendar connection, recording, and transcription are simulated and clearly labeled. The optional voice check is real, and the capture picker reflects audio-and-video, audio-only, and bot-free transcript-only workflows. I stubbed the capture infrastructure so I could spend the time on the post-meeting product reviewers actually use.
 
-## 2:15–3:00 — Summaries, actions, highlights
+**Do:** Click **Open the 60-minute meeting**.
 
-- Switch the summary template dropdown General → Executive → Sales, instantly.
-- Actions tab: check off an item, reload/re-open the meeting to show completion persisted.
-- Transcript tab: hover a segment, click the ✦ button to create a highlight on the spot.
-- Highlights tab: show the one you just created (tagged "Yours"), then open one, click "Public clip."
+### 0:55–1:35 — Demonstrate the long-call stress case
 
-## 3:00–3:40 — Public share page
+**Show:** The eight-person Q4 product council.
 
-On the share page (new tab or note it's unauthenticated):
+**Say:**
 
-"This is the recipient view — no login, no app chrome. Just the moment, the quote, and the source meeting."
+> This is the case that matters: a 60-minute meeting with eight participants, realistic transcript density, topic chapters, actions, decisions, and highlights. The same workspace also includes a two-minute check-in and a 30-minute customer call.
 
-## 3:40–4:20 — Search and Ask
+**Do:**
 
-- `Cmd/Ctrl+K` → type "SSO" → show grounded cross-meeting keyword results (meeting, transcript, action hits).
-- In the same box, type a full question — "What did we decide about SSO?" → show the "Across 3 meetings" answer card that appears above the results, with citations back to the specific meeting and timestamp. Click one to jump straight there.
-- Open Ask on a single meeting's tab too → click a suggested question → show the per-meeting version of the same idea.
+1. Click **Play** for one or two seconds, then pause.
+2. Click the **SSO** topic chip.
+3. Point at the updated player time and current speaker.
 
-"Search and Ask are deterministic for the demo, but every answer — whether it's scoped to one meeting or asking across all of them — still cites a real meeting and timestamp rather than free-floating prose."
+**Say:**
 
-## 4:20–4:50 — Architecture and judgment
+> Playback, topic navigation, speaker state, transcript position, citations, and highlights all share one timeline. A user can skip directly to meaning instead of scrubbing through an hour of video.
 
-"Build side: dependency-free static SPA — no framework, no build step — intentional for a 24-hour assignment where reliability during review matters more than a component library. State is hash-routed and localStorage-backed. Everything explicitly stubbed — recording, OAuth, transcription — is labeled 'simulated' persistently in the UI, not hidden in a settings page."
+### 1:35–2:10 — Prove transcript and evidence synchronization
 
-## 4:50–5:00 — Close
+**Do:**
 
-"Full scope tradeoffs are in `docs/SCOPE_DECISION.md`, agent-capture logs are in `.agent-logs/` for every turn across both Codex and Claude Code sessions that built this. Thanks."
+1. Click the **Transcript** tab.
+2. Type `SAML` into **Find in transcript**.
+3. Click the first matching transcript segment.
+4. Clear the transcript search.
+5. Click **Summary**, then click the `15:38` citation beside the SSO decision.
 
----
+**Say:**
 
-## Explicit stub disclosure (say this out loud, don't skip it)
+> Transcript search finds the exact language, and every important AI-generated claim links back to evidence. Clicking a transcript segment or a summary citation seeks the same player. Grounded verification was the main product principle I took from researching Fathom.
 
-- No real meeting bot, calendar OAuth, or audio/video capture — the microphone check in onboarding is real (it actually listens), but nothing downstream of it is a real recording.
-- No production transcription or LLM inference at request time — summaries, Ask, and search are deterministic against seeded content, cited to real timestamps.
-- No billing, team administration, or CRM integrations (Fathom's real `Alerts`/`Deals` tabs and coaching features — confirmed by signing into the real product, not guessed).
-- Research was hands-on for navigation, onboarding, and account state (signed into the real free plan), but not for an actual recorded meeting — that specific gap (transcript/summary/highlight fidelity) rests on Fathom's own help-center documentation rather than a first-hand recording. Said plainly here rather than left as a doc footnote.
+### 2:10–2:45 — Show summaries and accountable actions
+
+**Do:**
+
+1. In the Summary dropdown, switch **General → Executive → Sales**, then return to **General**.
+2. Open **Actions 7**.
+3. Check the first action.
+4. Refresh the browser.
+5. Open **Actions 7** again and point at the still-checked item.
+
+**Say:**
+
+> The same meeting can be reframed instantly for different jobs. Actions include an owner, due date, and source moment. Completion persists in the browser, so this is a working workflow rather than a static mock-up.
+
+### 2:45–3:20 — Create and share a highlight
+
+**Do:**
+
+1. Open **Transcript**.
+2. Hover the first visible segment and click its **✦** button.
+3. Open **Highlights** and point at the new card tagged **Yours**.
+4. On any stable seeded highlight, click **Public clip**.
+
+**Say:**
+
+> A user can turn any transcript moment into a reusable highlight. This public recipient view works without an account and removes the full application chrome, so the recipient gets only the quote, timing, and source meeting.
+
+**Do:** Click the Reverb logo to return to the meeting library.
+
+### 3:20–4:05 — Demonstrate global search and Ask
+
+**Do:**
+
+1. Press **Ctrl+K** on Windows or **Cmd+K** on macOS.
+2. Type `SSO` and pause so the meeting, transcript, and action results are visible.
+3. Replace it with `What did we decide about SSO?`.
+4. Point at the **Across 3 meetings** answer and its timestamp citations.
+5. Click the first cited result to jump back to its meeting moment.
+6. Open the meeting’s **Ask** tab and click **Who owns the next steps?**
+
+**Say:**
+
+> Global search retrieves exact evidence across titles, people, transcripts, and actions. Ask turns that evidence into a concise answer with meeting and timestamp citations. The demo answers are deterministic, but they never become untraceable free-floating prose. The same grounded pattern also works inside one meeting.
+
+### 4:05–4:35 — Explain engineering judgment and omissions
+
+**Show:** Keep the Ask answer or meeting detail visible. Do not open code or the repository.
+
+**Say:**
+
+> I built Reverb as a dependency-free static application for speed, reliability, and easy review. It is responsive, keyboard accessible, and seeded with realistic data. Recording bots, OAuth, production transcription, billing, team administration, and CRM integrations are intentionally out of scope. Those tradeoffs are documented in the repository alongside the product research, browser QA report, screenshots, and automatic agent logs.
+
+### 4:35–4:45 — Close cleanly
+
+**Say:**
+
+> The live product and public repository are linked in the submission. Thanks for watching.
+
+Stop speaking, hold the final screen for one second, then stop the recording.
+
+## What the finished video must visibly prove
+
+- Your camera stays on for the entire video.
+- The browser is on `hamzafarooqii.github.io`, never localhost.
+- The long meeting shows 59:48 and eight participants.
+- A topic or timestamp changes the shared player position.
+- At least two summary templates visibly change the overview.
+- An action remains checked after refresh.
+- A new highlight appears with the **Yours** badge.
+- The public clip opens without a sign-in screen.
+- Global Search and Ask show timestamped evidence.
+- You say out loud that recording, OAuth, transcription, and runtime AI are simulated or deterministic.
+
+## If something goes wrong while recording
+
+- **A browser permission prompt appears:** dismiss it and continue. Do not troubleshoot permissions on camera.
+- **The action is already checked:** uncheck it, then check it again before refreshing.
+- **A custom highlight already exists:** use another transcript segment. Do not delete items during the video.
+- **Search is still open when you need to navigate:** press Escape once.
+- **You miss a click:** continue speaking and make the click. Do not restart unless the wrong page or private information was shown.
+- **You reach 4:30 before the final section:** skip the per-meeting Ask example and deliver the engineering judgment and closing lines.
+
+## After recording
+
+1. Confirm the exported video is under five minutes.
+2. Watch it once with sound and confirm your camera is visible throughout.
+3. Open the video link in a signed-out/incognito window.
+4. Paste the public video URL into the `Walkthrough:` line in `docs/SUBMISSION.md`.
+5. Commit and push that one documentation change.
+
+## Mandatory disclosure — do not omit
+
+Say these facts during the walkthrough, in your own words if necessary:
+
+- Calendar connection, the recording bot, media capture, and transcription are simulated.
+- The onboarding microphone check is real, but it is not a recording pipeline and stores no meeting.
+- Summaries, Search, and Ask run deterministically against seeded data rather than calling a production LLM at request time.
+- Billing, team administration, coaching, deals, and CRM integrations are outside this build’s scope.
