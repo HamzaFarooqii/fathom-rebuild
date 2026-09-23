@@ -52,5 +52,6 @@ See `SETUP.md` for the verification procedure.
 - `docs/SCOPE_DECISION.md` — scope, stubs, and information architecture
 - `docs/WALKTHROUGH_SCRIPT.md` — the camera-on walkthrough script
 - `docs/SUBMISSION.md` — final submission links
+- `qa/QA-REPORT.md` — branch review, browser workflow matrix, fixes, and screenshots
 - `SUBMISSION-CHECKLIST.md` — pre-submission gate
 - `PLAN.md` — the original 24-hour execution plan

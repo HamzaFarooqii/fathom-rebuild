@@ -19,6 +19,7 @@
 - [x] Search returns meaningful matches (titles, transcript text, people, actions — via Cmd/Ctrl+K) — screenshot-verified
 - [x] Shared clip opens without authentication (`#/share/:id` renders with no auth check) — screenshot-verified
 - [x] Responsive layout and keyboard focus — breakpoints at 1050px/720px, `:focus-visible`, reduced-motion — mobile viewport (390×844) screenshot-verified
+- [x] Final branch/browser audit completed on `main`; fixes and screenshots are recorded in `qa/QA-REPORT.md`
 
 ## Quality gates
 
@@ -40,5 +41,4 @@
 
 ## Outstanding before final hand-in
 
-1. Review and merge [PR #1](https://github.com/HamzaFarooqii/fathom-rebuild/pull/1) so `main` reflects the finished state — everything so far has been committed to the `codex/fathom-rebuild` feature branch per git discipline.
-2. Record the walkthrough video (script at `docs/WALKTHROUGH_SCRIPT.md`) and drop the link into `docs/SUBMISSION.md`.
+1. Record the walkthrough video (script at `docs/WALKTHROUGH_SCRIPT.md`) and drop the link into `docs/SUBMISSION.md`.
