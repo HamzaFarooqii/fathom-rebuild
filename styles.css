@@ -189,6 +189,14 @@ h3 { font-size: 14px; }
 .mic-meter { display: flex; gap: 4px; align-items: flex-end; height: 26px; margin: -6px 4px 14px; }
 .mic-meter[hidden] { display: none; }
 .mic-meter span { width: 6px; height: 100%; background: linear-gradient(180deg,var(--accent-2),var(--accent)); border-radius: 3px; transform: scaleY(0.15); transform-origin: bottom; transition: transform .08s linear; }
+.capture-mode-picker { margin-bottom: 16px; }
+.mode-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.mode-pill { border: 1px solid var(--line); background: white; border-radius: 999px; padding: 8px 12px; cursor: pointer; font-size: 11px; font-weight: 700; color: var(--muted); }
+.mode-pill.active { background: var(--ink); color: white; border-color: var(--ink); }
+.mode-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
+.stage-transcript-only { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; color: #bac4d9; max-width: 360px; }
+.stage-transcript-icon { font-size: 28px; }
+.stage-transcript-only p { margin: 0; font-size: 11px; line-height: 1.6; }
 .mobile-menu { display: none; }
 @media (max-width: 1050px) {
   .detail-grid { grid-template-columns: 1fr; }
