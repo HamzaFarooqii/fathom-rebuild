@@ -54,3 +54,7 @@ Capture test received: **8x assignment — Hamza Farooq — second session**. Pl
 ## Attempts that did not work
 
 The first two Desktop tasks ran before the project hooks were trusted, so Codex skipped the hooks and created no usable session logs. After trust was granted, the original 10-second hook deadline produced a header-only log before PowerShell finished. Increasing both hook deadlines to 30 seconds fixed that timeout. A subsequent diagnostic exposed Windows stdin decoding the em dash as mojibake; setting PowerShell's console input encoding to UTF-8 fixed it. Synthetic and incomplete diagnostic logs are retained under `.agent-logs/` but are not counted as either verified canary above.
+
+## Format correction (found when re-checking against the original assignment brief)
+
+The two canary entries above use the **full** session UUID in the `[LOG_ENTRY ... session=...]` bracket (e.g. `session=01a0cd6d-aedd-77f2-9010-e8c891024104`), but the assignment brief's own example uses the **short**, 8-character form (`session=3f9c1a20`) in that bracket while still using the full UUID in the frontmatter `session_id:` field. `scripts/capture-agent-turn.ps1` has been corrected to write the short form in the bracket going forward, for both Codex and Claude Code. Per the brief's own instruction not to edit an entry after the fact, the two entries above — and every other already-committed `.agent-logs/*.md` file from before this fix — are left exactly as originally captured, unedited.

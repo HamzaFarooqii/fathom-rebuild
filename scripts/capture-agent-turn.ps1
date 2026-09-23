@@ -161,7 +161,7 @@ Session: ``$shortSessionId`` | Project: ``fathom-rebuild`` | Author: ``HamzaFaro
             $entry = @"
 
 
-[LOG_ENTRY type=PROMPT num=$entryNumber session=$sessionId]
+[LOG_ENTRY type=PROMPT num=$entryNumber session=$shortSessionId]
 timestamp: $timestamp
 model: $model
 
@@ -184,7 +184,7 @@ $($event.prompt)
                     $promptEntry = @"
 
 
-[LOG_ENTRY type=PROMPT num=$entryNumber session=$sessionId]
+[LOG_ENTRY type=PROMPT num=$entryNumber session=$shortSessionId]
 timestamp: $($transcriptPrompt.Timestamp)
 model: $model
 
@@ -200,7 +200,7 @@ $($transcriptPrompt.Text)
                 $entry = @"
 
 
-[LOG_ENTRY type=RESPONSE num=$entryNumber session=$sessionId]
+[LOG_ENTRY type=RESPONSE num=$entryNumber session=$shortSessionId]
 timestamp: $timestamp
 model: $model
 
