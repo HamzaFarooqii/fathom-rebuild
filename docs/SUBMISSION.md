@@ -6,6 +6,8 @@ Repository: https://github.com/HamzaFarooqii/fathom-rebuild
 
 Walkthrough: <URL — record per docs/WALKTHROUGH_SCRIPT.md and paste the link here before submitting>
 
+**Note:** all work is on `codex/fathom-rebuild` and open as [PR #1](https://github.com/HamzaFarooqii/fathom-rebuild/pull/1) into `main`. Merge that PR before sharing the bare repository URL above, or link reviewers directly to the branch/PR if `main` is still behind.
+
 ## Notes for reviewers
 
 - The product is a dependency-free static single-page app in `dist/`, deployed to GitHub Pages from the `gh-pages` branch. No build step is required to run or review it.
