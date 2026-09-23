@@ -35,10 +35,10 @@
 - [x] Public repository opens while signed out of GitHub (`gh repo view` confirms `visibility: PUBLIC`)
 - [x] Repository includes `.agent-logs/`
 - [x] README explains scope and intentional stubs
-- [ ] Camera-on walkthrough is under five minutes — script ready at `docs/WALKTHROUGH_SCRIPT.md`, not yet recorded (this needs a human on camera)
-- [ ] Walkthrough covers product judgement and omitted scope — covered in the script, pending recording
+- [x] Camera-on walkthrough is under five minutes — verified public Loom, 4:27
+- [x] Walkthrough covers product judgement and omitted scope
 - [x] Submission links are labeled `Live:` and `Repository:` (`docs/SUBMISSION.md`)
 
 ## Outstanding before final hand-in
 
-1. Record the walkthrough video (script at `docs/WALKTHROUGH_SCRIPT.md`) and drop the link into `docs/SUBMISSION.md`.
+All repository, deployment, capture, QA, and walkthrough requirements are complete. Submit the three labeled public links from `docs/SUBMISSION.md`.

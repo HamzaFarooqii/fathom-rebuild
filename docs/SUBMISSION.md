@@ -4,7 +4,7 @@ Live: https://hamzafarooqii.github.io/fathom-rebuild/
 
 Repository: https://github.com/HamzaFarooqii/fathom-rebuild
 
-Walkthrough: <URL — record per docs/WALKTHROUGH_SCRIPT.md and paste the link here before submitting>
+Walkthrough: https://www.loom.com/share/2ff3724d667d45cbb597b9a5f5eb9170
 
 **Status:** `main` is the current product branch. PR #1 has been merged, and `gh-pages` is the deployment mirror.
 
